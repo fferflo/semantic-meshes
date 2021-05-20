@@ -1,12 +1,9 @@
 [submodule "extern/tinyply"]
 	path = extern/tinyply
 	url = https://github.com/ddiakopoulos/tinyply
-	branch = master
 [submodule "extern/dlpack"]
 	path = extern/dlpack
 	url = https://github.com/dmlc/dlpack
-	branch = master
 [submodule "extern/template-tensors"]
 	path = extern/template-tensors
 	url = https://github.com/fferflo/template-tensors
-	branch = master
