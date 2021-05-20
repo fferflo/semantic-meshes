@@ -66,7 +66,7 @@ If you want to skip installation and jump right in, we provide a docker file tha
    * If your system is using a proxy, add: `--build-arg HTTP_PROXY=... --build-arg HTTPS_PROXY=...`
 3. Open a command prompt in the docker image and mount a folder from your host system (`HOST_PATH`) that contains your colmap workspace into the docker image (`DOCKER_PATH`): `docker run -v /HOST_PATH:/DOCKER_PATH --gpus all -it semantic-meshes bash`
 4. Run the provided example script inside the docker image to annotate the mesh with Cityscapes annotations:
-```colorize_cityscapes_mesh.py --colmap DOCKER_PATH/colmap --input_ply DOCKER_PATH/colmap/dense/meshed-delaunay.ply --images DOCKER_PATH/colmap/dense/images --output_ply DOCKER_PATH/colorized_mesh.ply```
+```colorize_cityscapes_mesh.py --colmap /DOCKER_PATH/colmap --input_ply /DOCKER_PATH/colmap/dense/meshed-delaunay.ply --images /DOCKER_PATH/colmap/dense/images --output_ply /DOCKER_PATH/colorized_mesh.ply```
 
 Running the repository inside a docker image is significantly slower than running it in the host system (12sec/image vs 2sec/image on RTX 6000).
 
