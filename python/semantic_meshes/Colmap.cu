@@ -31,9 +31,9 @@ struct ColmapMesh
     static_cast<TThisType*>(this)->renderer.render(image_d, image_index);
 
     tt::AllocMatrixT<uint32_t, mem::alloc::device, tt::RowMajor> indices_d(image_d.dims());
-    indices_d = TENSOR_ELWISE_MEMBER(image_d, primitive_index);
+    indices_d = TT_ELWISE_MEMBER(image_d, primitive_index);
     tt::AllocMatrixT<float, mem::alloc::device, tt::RowMajor> depth_d(image_d.dims());
-    depth_d = TENSOR_ELWISE_MEMBER(image_d, z);
+    depth_d = TT_ELWISE_MEMBER(image_d, z);
 
     boost::python::object indices = tt::boost::python::fromDlPack(tt::toDlPack(indices_d), "dltensor");
     boost::python::object depth = tt::boost::python::fromDlPack(tt::toDlPack(depth_d), "dltensor");
