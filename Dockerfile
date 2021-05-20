@@ -16,6 +16,6 @@ RUN pip3 install tensorflow-gpu==2.4 numpy==1.19.2
 RUN git clone https://github.com/fferflo/semantic-meshes
 RUN mkdir /semantic-meshes/build
 WORKDIR /semantic-meshes/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=../install -DCLASSES_NUMS=19 -DBUILD_PYTHON_INTERFACE=ON ..
+RUN cmake -DCLASSES_NUMS=19 -DBUILD_PYTHON_INTERFACE=ON ..
 RUN make -j8 && make install
 RUN pip3 install ./python
