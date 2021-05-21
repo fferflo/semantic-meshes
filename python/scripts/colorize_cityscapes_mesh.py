@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, os, imageio, math, sys
+import argparse, os, imageio, sys
 import semantic_meshes.fusion, semantic_meshes.colmap
 import tf_semseg
 import tensorflow as tf
