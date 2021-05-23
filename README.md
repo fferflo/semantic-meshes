@@ -76,6 +76,7 @@ Running the repository inside a docker image is significantly slower than runnin
 
 * **CUDA**: https://developer.nvidia.com/cuda-downloads
 * **OpenMP**: On Ubuntu: `sudo apt install libomp-dev`
+* **libffi**: On Ubuntu: `sudo apt install libffi-dev`
 * **Python 3**
 * **Boost**: Requires the python and numpy components of the Boost library, which have to be compiled for the python version that you are using. If you're lucky, your OS ships compatible Boost and Python3 versions. Otherwise, [compile boost from source](https://www.boost.org/doc/libs/1_76_0/more/getting_started/unix-variants.html) and make sure to include the `--with-python=python3` switch.
 
