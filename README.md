@@ -1,8 +1,6 @@
 # Semantic Meshes
 
-_A framework for annotating 3D meshes using the predictions of a 2D semantic segmentation model._
-
----------
+> A framework for annotating 3D meshes using the predictions of a 2D semantic segmentation model.
 
 ## Workflow
 
@@ -100,3 +98,5 @@ make -j8
 make install # Installs to the local install directory
 pip install ./python
 ```
+
+For a full installation script that also fetches and installs compatible Boost and Python versions, see [`install.sh`](https://github.com/fferflo/semantic-meshes/blob/master/install.sh).
