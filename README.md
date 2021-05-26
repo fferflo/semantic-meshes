@@ -2,6 +2,9 @@
 
 > A framework for annotating 3D meshes using the predictions of a 2D semantic segmentation model.
 
+[![Build](https://github.com/fferflo/semantic-meshes/actions/workflows/build-ci.yml/badge.svg?branch=master)](https://github.com/fferflo/semantic-meshes/actions/workflows/build-ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## Workflow
 
 1. Reconstruct a mesh of your scene from a set of images using [Colmap](https://github.com/colmap/colmap).
