@@ -10,7 +10,7 @@ setup(
     author_email="florian.fervers@gmail.com",
     packages=["semantic_meshes"],
     package_data={"semantic_meshes": ["*.so"]},
-    scripts=['scripts/colorize_cityscapes_mesh.py'],
+    scripts=["scripts/colorize_cityscapes_mesh.py", "scripts/colorize_mesh.py"],
     license="MIT",
     install_requires=[
           "tf-semseg",
