@@ -9,9 +9,9 @@ namespace colmap {
 Workspace::Workspace(boost::filesystem::path colmap_path, boost::filesystem::path ply_file)
   : m_tinyply_vertices("vertex", {"x", "y", "z"})
   , m_tinyply_faces("face")
-  , m_cameras(tt::colmap::readCameras(colmap_path / "cameras.bin"))
+  , m_cameras(tt::colmap::readCameras(colmap_path / "cameras.*"))
 {
-  std::map<uint32_t, tt::colmap::ImageMetaData> image_meta_data = tt::colmap::readImageMetaData(colmap_path / "images.bin");
+  std::map<uint32_t, tt::colmap::ImageMetaData> image_meta_data = tt::colmap::readImageMetaData(colmap_path / "images.*");
 
   m_image_meta_data_sorted.resize(image_meta_data.size());
   {
