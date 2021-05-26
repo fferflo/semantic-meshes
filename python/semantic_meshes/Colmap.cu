@@ -79,7 +79,7 @@ struct ColmapTriangleMesh : ColmapMesh<ColmapTriangleMesh>
     void operator()(std::string path, TAnnotationColors&& annotation_colors_in, bool bin)
     {
       auto annotation_colors = tt::eval<tt::ColMajor, mem::alloc::host_heap>
-        (tt::static_cast_to<tt::VectorXT<uint8_t, 3>>(tt::partial<1>(util::forward<TAnnotationColors>(annotation_colors_in))));
+        (tt::static_cast_to<tt::VectorXT<uint8_t, 3>>(tt::partial<1>(std::forward<TAnnotationColors>(annotation_colors_in))));
 
       auto colors_red = mem::toHost(tt::eval(tt::elwise([](tt::VectorXT<uint8_t, 3> color){return color(0);}, annotation_colors)));
       auto colors_green = mem::toHost(tt::eval(tt::elwise([](tt::VectorXT<uint8_t, 3> color){return color(1);}, annotation_colors)));

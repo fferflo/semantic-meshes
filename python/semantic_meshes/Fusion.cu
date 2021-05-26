@@ -7,7 +7,7 @@ class ModelRenderer
 {
 public:
   ModelRenderer(semantic_meshes::ModelRenderer<TAnnotation, TAllocator>&& renderer)
-    : m_renderer(util::move(renderer))
+    : m_renderer(std::move(renderer))
   {
   }
 
@@ -20,7 +20,7 @@ public:
     void operator()(TPrimitiveImage&& primitive_image)
     {
       tt::AllocMatrixT<TAnnotation, mem::alloc::host_heap, tt::RowMajor> image(primitive_image.dims());
-      self.m_renderer.render(image, util::forward<TPrimitiveImage>(primitive_image), TAnnotation(0));
+      self.m_renderer.render(image, std::forward<TPrimitiveImage>(primitive_image), TAnnotation(0));
       rendered = tt::boost::python::toNumpy(tt::total<2>(image));
     }
   };
@@ -68,9 +68,9 @@ public:
     void operator()(TPrimitiveImage&& primitive_image, TProbsImage&& probs_image, TWeightsImage&& weights_image)
     {
       self.m_aggregator.add(
-        util::forward<TPrimitiveImage>(primitive_image),
-        tt::partial<2>(util::forward<TProbsImage>(probs_image)),
-        util::forward<TWeightsImage>(weights_image)
+        std::forward<TPrimitiveImage>(primitive_image),
+        tt::partial<2>(std::forward<TProbsImage>(probs_image)),
+        std::forward<TWeightsImage>(weights_image)
       );
     }
 
@@ -78,8 +78,8 @@ public:
     void operator()(TPrimitiveImage&& primitive_image, TProbsImage&& probs_image)
     {
       self.m_aggregator.add(
-        util::forward<TPrimitiveImage>(primitive_image),
-        tt::partial<2>(util::forward<TProbsImage>(probs_image))
+        std::forward<TPrimitiveImage>(primitive_image),
+        tt::partial<2>(std::forward<TProbsImage>(probs_image))
       );
     }
   };
@@ -156,7 +156,7 @@ struct nan_and_inf_to_zero
   template <typename T, typename TDecay = typename std::decay<T>::type>
   TDecay operator()(T&& t) const volatile
   {
-    return (math::isnan(t) || math::isinf(t)) ? static_cast<TDecay>(0) : static_cast<TDecay>(util::forward<T>(t));
+    return (math::isnan(t) || math::isinf(t)) ? static_cast<TDecay>(0) : static_cast<TDecay>(std::forward<T>(t));
   }
 };
 
@@ -165,7 +165,7 @@ struct nan_and_inf_to_zero_elwise
   template <typename T, size_t TRows = tt::rows_v<T>::value, typename TElementType = tt::decay_elementtype_t<T>>
   tt::VectorXT<TElementType, TRows> operator()(T&& t) const volatile
   {
-    return tt::elwise(nan_and_inf_to_zero(), util::forward<T>(t));
+    return tt::elwise(nan_and_inf_to_zero(), std::forward<T>(t));
   }
 };
 

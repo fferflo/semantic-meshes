@@ -26,7 +26,7 @@ public:
   void render(TDestImage&& dest_image, TPrimitiveImage&& primitives_image_in, TPixel background)
   {
     static_assert(mem::isOnHost<mem::memorytype_v<TDestImage>::value>(), "Destination image must be on host");
-    DECLTYPE_AUTO(primitives_image, mem::toHost(util::forward<TPrimitiveImage>(primitives_image_in)));
+    DECLTYPE_AUTO(primitives_image, mem::toHost(std::forward<TPrimitiveImage>(primitives_image_in)));
     using DestPixel = decltype(dest_image());
     tt::op::LocalArrayForEach<openmp::ForEach>::for_each<2>([&](tt::Vector2s pos, DestPixel p){
       size_t primitive_index = primitives_image(pos);
@@ -74,17 +74,17 @@ public:
     }
     DECLTYPE_AUTO(primitives_image,
       tt::eval<tt::RowMajor, mem::alloc::host_heap>(
-        mem::toHost(util::forward<TPrimitiveImage>(primitives_image_in))
+        mem::toHost(std::forward<TPrimitiveImage>(primitives_image_in))
       )
     );
     DECLTYPE_AUTO(probs_image,
       //tt::eval<tt::RowMajor, mem::alloc::host_heap>(
-        tt::static_cast_to<tt::VectorXT<float, CLASSES_NUM>>(mem::toHost(util::forward<TProbsImage>(probs_image_in)))
+        tt::static_cast_to<tt::VectorXT<float, CLASSES_NUM>>(mem::toHost(std::forward<TProbsImage>(probs_image_in)))
       //)
     );
     DECLTYPE_AUTO(weights_image,
       tt::eval<tt::RowMajor, mem::alloc::host_heap>(
-        mem::toHost(util::forward<TWeightsImage>(weights_image_in))
+        mem::toHost(std::forward<TWeightsImage>(weights_image_in))
       )
     );
     std::map<size_t, size_t> pixels_per_face;
@@ -110,8 +110,8 @@ public:
   void add(TPrimitiveImage&& primitives_image_in, TProbsImage&& probs_image_in)
   {
     add(
-      util::forward<TPrimitiveImage>(primitives_image_in),
-      util::forward<TProbsImage>(probs_image_in),
+      std::forward<TPrimitiveImage>(primitives_image_in),
+      std::forward<TProbsImage>(probs_image_in),
       tt::broadcast<tt::dimseq_t<TPrimitiveImage>>(tt::singleton(1.0f), primitives_image_in.dims())
     );
   }
