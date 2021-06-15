@@ -8,10 +8,8 @@ RUN apt-get update -y \
  && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null \
  && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
 
-RUN apt-get update -y
-
 # Install other dependencies
-RUN apt-get install -y build-essential git libomp-dev git cmake python3 python3-pip libboost1.71-all-dev
+RUN apt-get update -y && apt-get install -y build-essential git libomp-dev git cmake python3 python3-pip libboost1.71-all-dev
 RUN pip3 install tensorflow-gpu==2.4 numpy==1.19.2
 
 RUN apt-get autoclean && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*
