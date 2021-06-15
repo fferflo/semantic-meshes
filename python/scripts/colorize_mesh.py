@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description="Annotate a colmap mesh with classes from mask images and save as colorized ply.")
-parser.add_argument("--colmap", type=str, required=True, help="Path to colmap workspace folder containing {cameras, images, points3D}.bin")
+parser.add_argument("--colmap", type=str, required=True, help="Path to colmap workspace folder containing {cameras, images, points3D}.{bin|txt}")
 parser.add_argument("--input_ply", type=str, required=True, help="Input mesh file")
 parser.add_argument("--masks", type=str, required=True, help="Path to folder containing masks of images reconstructed in the colmap workspace")
 parser.add_argument("--classes", type=int, required=True, help="Number of classes")
