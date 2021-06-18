@@ -1,10 +1,12 @@
 #pragma once
 
 #include <template_tensors/TemplateTensors.h>
+#include <semantic_meshes/data/Ply.h>
+#include <semantic_meshes/render/Camera.h>
 
 namespace semantic_meshes {
 
-namespace colmap {
+namespace render {
 
 class TriangleRenderer
 {
@@ -25,22 +27,21 @@ public:
     }
   };
 
-  TriangleRenderer(std::shared_ptr<Workspace> workspace)
-    : m_workspace(workspace)
-    , m_renderer(0)
-    , m_vertices_d(workspace->getTinyplyVertices().size())
-    , m_triangles_d(workspace->getTinyplyFaces().size())
+  TriangleRenderer(std::shared_ptr<data::Ply> ply, std::vector<Camera> cameras)
+    : m_renderer(0)
+    , m_vertices_d(ply->getTinyplyVertices().size())
+    , m_triangles_d(ply->getTinyplyFaces().size())
   {
     // Construct model data
-    tt::fromThrust(m_vertices_d) = workspace->getTinyplyVertices().data();
+    tt::fromThrust(m_vertices_d) = ply->getTinyplyVertices().data();
     tt::for_each(TriangleLambda(thrust::raw_pointer_cast(m_vertices_d.data())),
-      tt::fromThrust(m_triangles_d), mem::toDevice(workspace->getTinyplyFaces().data()));
+      tt::fromThrust(m_triangles_d), mem::toDevice(ply->getTinyplyFaces().data()));
 
     // Construct renderer
     size_t max_pixels = 0;
-    for (auto it = m_workspace->getCameras().begin(); it != m_workspace->getCameras().end(); ++it)
+    for (auto& camera : cameras)
     {
-      max_pixels = math::max(max_pixels, tt::prod(it->second.resolution));
+      max_pixels = math::max(max_pixels, tt::prod(camera.resolution));
     }
     m_renderer = decltype(m_renderer)(max_pixels);
   }
@@ -67,20 +68,10 @@ public:
     }
   };
 
-  template <typename TImageId>
-  tt::Vector2s getResolution(TImageId image_id) const
-  {
-    auto image_meta_data = m_workspace->getImageMetaData(image_id);
-    return m_workspace->getCamera(image_meta_data.camera_id).resolution;
-  }
-
-  template <typename TImage, typename TImageId>
-  void render(TImage&& image_d, TImageId image_id)
+  template <typename TImage>
+  void render(TImage&& image_d, Camera camera)
   {
     using Pixel = decltype(image_d());
-    auto image_meta_data = m_workspace->getImageMetaData(image_id);
-    auto& intr = m_workspace->getCamera(image_meta_data.camera_id).projection;
-    tt::geometry::transform::Rigid<float, 3> extr = image_meta_data.transform;
 
     // Reset z buffer
     tt::for_each([]__device__(Pixel& p){
@@ -94,18 +85,17 @@ public:
       dispatch::id(m_triangles_d.begin()),
       dispatch::id(m_triangles_d.end()),
       dispatch::id(Shader(thrust::raw_pointer_cast(m_triangles_d.data()))),
-      dispatch::id(extr),
-      intr
+      dispatch::id(camera.extr),
+      camera.intr
     )(m_renderer);
   }
 
 private:
-  std::shared_ptr<Workspace> m_workspace;
   tt::geometry::render::DeviceMutexRasterizer<16 * 16> m_renderer;
   thrust::device_vector<tt::Vector3f> m_vertices_d;
   thrust::device_vector<tt::geometry::render::VertexIndexTriangle<float, int32_t>> m_triangles_d;
 };
 
-} // end of ns colmap
+} // end of ns render
 
 } // end of ns semantic_meshes

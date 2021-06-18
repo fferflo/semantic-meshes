@@ -87,10 +87,11 @@ public:
         mem::toHost(std::forward<TWeightsImage>(weights_image_in))
       )
     );
+
     std::map<size_t, size_t> pixels_per_face;
     tt::op::LocalForEach::for_each([&](size_t primitive_index){
       pixels_per_face.insert({primitive_index, 0}).first->second += 1;
-    }, primitives_image);
+    }, primitives_image); // TODO: this could be precomputed as a pixel weight map per frame
     tt::op::LocalArrayForEach<openmp::ForEach>::for_each<2>([&](tt::Vector2s pos, size_t primitive_index, float weight){
       if (primitive_index < m_annotations.rows())
       {

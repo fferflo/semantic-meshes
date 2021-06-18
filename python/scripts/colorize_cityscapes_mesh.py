@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse, os, imageio, sys
-import semantic_meshes.fusion, semantic_meshes.colmap
+import semantic_meshes.fusion, semantic_meshes.data, semantic_meshes.render
 import tf_semseg
 import tensorflow as tf
 import numpy as np
@@ -44,8 +44,10 @@ predictor = tf_semseg.predict.multi_scale(predictor, [0.5]) # Resize input image
 predictor = tf.function(predictor) # Improve performance by compiling to tensorflow graph
 
 print("Creating mesh...")
-mesh = semantic_meshes.colmap.ColmapTriangleMesh(args.colmap, args.input_ply)
-aggregator = semantic_meshes.fusion.MeshAggregator(primitives=mesh.getPrimitivesNum(), classes=19)
+mesh = semantic_meshes.data.Ply(args.input_ply)
+colmap_workspace = semantic_meshes.data.Colmap(args.colmap)
+renderer = semantic_meshes.render.renderer(mesh, colmap_workspace)
+aggregator = semantic_meshes.fusion.MeshAggregator(primitives=renderer.getPrimitivesNum(), classes=19)
 
 print("Annotating mesh...")
 image_files = os.listdir(args.images)
@@ -62,7 +64,7 @@ for image_file in tqdm(image_files):
     prediction = prediction[0, :, :, :] # Remove batch dimension
 
     # Project annotations into mesh
-    primitive_indices, _ = mesh.render(image_file)
+    primitive_indices, _ = renderer.render(colmap_workspace.getCamera(image_file))
     prediction = tf.transpose(prediction, perm=(1, 0, 2))
     aggregator.add(primitive_indices, prediction)
 

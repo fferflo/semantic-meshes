@@ -1,15 +1,11 @@
-#include <semantic_meshes/colmap/Workspace.h>
-
-#include <boost/algorithm/string/predicate.hpp>
+#include <semantic_meshes/data/Colmap.h>
 
 namespace semantic_meshes {
 
-namespace colmap {
+namespace data {
 
-Workspace::Workspace(boost::filesystem::path colmap_path, boost::filesystem::path ply_file)
-  : m_tinyply_vertices("vertex", {"x", "y", "z"})
-  , m_tinyply_faces("face")
-  , m_cameras(tt::colmap::readCameras(colmap_path / "cameras.*"))
+Colmap::Colmap(boost::filesystem::path colmap_path)
+  : m_cameras(tt::colmap::readCameras(colmap_path / "cameras.*"))
 {
   std::map<uint32_t, tt::colmap::ImageMetaData> image_meta_data = tt::colmap::readImageMetaData(colmap_path / "images.*");
 
@@ -24,47 +20,34 @@ Workspace::Workspace(boost::filesystem::path colmap_path, boost::filesystem::pat
       return image1.name < image2.name;
     });
   }
-
-  tt::tinyply::read(ply_file, m_tinyply_vertices, m_tinyply_faces);
-  m_tinyply_faces.setPropertyKey("vertex_indices");
 }
 
-tt::tinyply::ReadProperty<float, 3>& Workspace::getTinyplyVertices()
+std::vector<Camera> Colmap::getCameras() const
 {
-  return m_tinyply_vertices;
+  std::vector<Camera> result;
+  for (size_t index = 0; index < m_image_meta_data_sorted.size(); index++)
+  {
+    result.push_back(this->getCamera(index));
+  }
+  return result;
 }
 
-tt::tinyply::ReadProperty<int32_t, 3, uint8_t>& Workspace::getTinyplyFaces()
-{
-  return m_tinyply_faces;
-}
-
-const tt::colmap::Camera& Workspace::getCamera(uint32_t id) const
-{
-  return m_cameras.at(id);
-}
-
-const std::map<uint32_t, tt::colmap::Camera>& Workspace::getCameras() const
-{
-  return m_cameras;
-}
-
-size_t Workspace::getImageNum() const
+size_t Colmap::getImageNum() const
 {
   return m_image_meta_data_sorted.size();
 }
 
-const tt::colmap::ImageMetaData& Workspace::getImageMetaData(size_t index) const
+const tt::colmap::ImageMetaData& Colmap::getImageMetaData(size_t index) const
 {
   return m_image_meta_data_sorted[index];
 }
 
-const tt::colmap::ImageMetaData& Workspace::getImageMetaData(boost::filesystem::path path) const
+const tt::colmap::ImageMetaData& Colmap::getImageMetaData(boost::filesystem::path path) const
 {
   return getImageMetaData(getImageIndex(path));
 }
 
-size_t Workspace::getImageIndex(boost::filesystem::path path) const
+size_t Colmap::getImageIndex(boost::filesystem::path path) const
 {
   std::string filename = path.remove_trailing_separator().filename().string();
   for (size_t i = 0; i < m_image_meta_data_sorted.size(); i++)
@@ -78,6 +61,6 @@ size_t Workspace::getImageIndex(boost::filesystem::path path) const
   exit(-1); // TODO: proper exception handling
 }
 
-} // end of ns colmap
+} // end of ns data
 
 } // end of ns semantic_meshes

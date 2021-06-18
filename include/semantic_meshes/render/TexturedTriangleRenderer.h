@@ -1,10 +1,12 @@
 #pragma once
 
 #include <template_tensors/TemplateTensors.h>
+#include <semantic_meshes/data/Ply.h>
+#include <semantic_meshes/render/Camera.h>
 
 namespace semantic_meshes {
 
-namespace colmap {
+namespace render {
 
 template <typename TScalar, typename TIndexType, typename TResolutionType>
 class TexturedTriangle : public tt::geometry::render::VertexIndexTriangle<TScalar, TIndexType>
@@ -82,32 +84,29 @@ public:
     }
   };
 
-  TexturedTriangleRenderer(std::shared_ptr<Workspace> workspace, float texels_per_pixel = 0.1)
-    : m_workspace(workspace)
-    , m_renderer(0)
-    , m_vertices_d(workspace->getTinyplyVertices().size())
-    , m_triangles_d(workspace->getTinyplyFaces().size())
+  TexturedTriangleRenderer(std::shared_ptr<data::Ply> ply, std::vector<Camera> cameras, float texels_per_pixel = 0.1)
+    : m_renderer(0)
+    , m_vertices_d(ply->getTinyplyVertices().size())
+    , m_triangles_d(ply->getTinyplyFaces().size())
   {
-    thrust::host_vector<tt::Vector2ui> triangles_resolution(workspace->getTinyplyFaces().size());
-    openmp::ForEach::for_each(iterator::counting_iterator<size_t>(0), iterator::counting_iterator<size_t>(workspace->getTinyplyFaces().size()),
+    thrust::host_vector<tt::Vector2ui> triangles_resolution(ply->getTinyplyFaces().size());
+    openmp::ForEach::for_each(iterator::counting_iterator<size_t>(0), iterator::counting_iterator<size_t>(ply->getTinyplyFaces().size()),
       [&](size_t triangle_index){
         auto num_pixels_agg = aggregator::max<float>(0);
-        auto& face = workspace->getTinyplyFaces()[triangle_index];
+        auto& face = ply->getTinyplyFaces()[triangle_index];
         auto get_vertex = [&](size_t vertex_index){
-          return workspace->getTinyplyVertices()[face(vertex_index % 3)];
+          return ply->getTinyplyVertices()[face(vertex_index % 3)];
         };
-        for (size_t image_index = 0; image_index < m_workspace->getImageNum(); image_index++)
+        for (auto& camera : cameras)
         {
           // Project triangle to screen
-          auto& image = m_workspace->getImageMetaData(image_index);
-          auto& camera = workspace->getCamera(image.camera_id);
           tt::VectorXT<tt::Vector2f, 3> projected;
           bool in_front_of_camera = false;
           for (size_t vertex_index = 0; vertex_index < 3; vertex_index++)
           {
-            tt::Vector3f vertex_c = image.transform.transformPoint(get_vertex(vertex_index));
+            tt::Vector3f vertex_c = camera.extr.transformPoint(get_vertex(vertex_index));
             in_front_of_camera |= vertex_c(2) > 0;
-            projected(vertex_index) = dispatch::get_result(Project{vertex_c}, camera.projection);
+            projected(vertex_index) = dispatch::get_result(Project{vertex_c}, camera.intr);
           }
 
           // Aggregate
@@ -149,8 +148,8 @@ public:
     // Prefix sum
     m_primitive_num = 0;
     size_t num_without_texels = 0;
-    thrust::host_vector<uint32_t> triangles_first_texel_index(workspace->getTinyplyFaces().size());
-    for (size_t triangle_index = 0; triangle_index < workspace->getTinyplyFaces().size(); triangle_index++)
+    thrust::host_vector<uint32_t> triangles_first_texel_index(ply->getTinyplyFaces().size());
+    for (size_t triangle_index = 0; triangle_index < ply->getTinyplyFaces().size(); triangle_index++)
     {
       triangles_first_texel_index[triangle_index] = m_primitive_num;
       size_t texel_num = Triangle::getTexelNum(triangles_resolution[triangle_index]);
@@ -163,20 +162,20 @@ public:
     std::cout << "Got " << triangles_first_texel_index.size() << " triangles, " << m_primitive_num << " texels and " << num_without_texels << " triangles without texels" << std::endl;
 
     // Construct model data
-    tt::fromThrust(m_vertices_d) = workspace->getTinyplyVertices().data();
+    tt::fromThrust(m_vertices_d) = ply->getTinyplyVertices().data();
     tt::for_each(
       TriangleLambda(thrust::raw_pointer_cast(m_vertices_d.data())),
       tt::fromThrust(m_triangles_d),
-      mem::toDevice(workspace->getTinyplyFaces().data()),
+      mem::toDevice(ply->getTinyplyFaces().data()),
       mem::toDevice(tt::fromThrust(triangles_resolution)),
       mem::toDevice(tt::fromThrust(triangles_first_texel_index))
     );
 
     // Construct renderer
     size_t max_pixels = 0;
-    for (auto it = m_workspace->getCameras().begin(); it != m_workspace->getCameras().end(); ++it)
+    for (auto& camera : cameras)
     {
-      max_pixels = math::max(max_pixels, tt::prod(it->second.resolution));
+      max_pixels = math::max(max_pixels, tt::prod(camera.resolution));
     }
     m_renderer = decltype(m_renderer)(max_pixels);
   }
@@ -196,20 +195,10 @@ public:
     }
   };
 
-  template <typename TImageId>
-  tt::Vector2s getResolution(TImageId image_id) const
-  {
-    auto image_meta_data = m_workspace->getImageMetaData(image_id);
-    return m_workspace->getCamera(image_meta_data.camera_id).resolution;
-  }
-
-  template <typename TImage, typename TImageId>
-  void render(TImage&& image_d, TImageId image_id)
+  template <typename TImage>
+  void render(TImage&& image_d, Camera camera)
   {
     using Pixel = decltype(image_d());
-    auto image_meta_data = m_workspace->getImageMetaData(image_id);
-    auto& intr = m_workspace->getCamera(image_meta_data.camera_id).projection;
-    tt::geometry::transform::Rigid<float, 3> extr = image_meta_data.transform;
 
     // Reset z buffer
     tt::for_each([]__device__(Pixel& p){
@@ -223,19 +212,18 @@ public:
       dispatch::id(m_triangles_d.begin()),
       dispatch::id(m_triangles_d.end()),
       dispatch::id(Shader()),
-      dispatch::id(extr),
-      intr
+      dispatch::id(camera.extr),
+      camera.intr
     )(m_renderer);
   }
 
 private:
-  std::shared_ptr<Workspace> m_workspace;
   tt::geometry::render::DeviceMutexRasterizer<16 * 16> m_renderer;
   thrust::device_vector<tt::Vector3f> m_vertices_d;
   thrust::device_vector<Triangle> m_triangles_d;
   size_t m_primitive_num;
 };
 
-} // end of ns colmap
+} // end of ns render
 
 } // end of ns semantic_meshes

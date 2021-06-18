@@ -1,7 +1,10 @@
 find_package(TemplateTensors REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 
-add_library(semantic_meshes SHARED ColmapWorkspace.cpp)
+add_library(semantic_meshes SHARED
+  data/Ply.cpp
+  data/Colmap.cpp
+)
 target_include_directories(semantic_meshes
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
