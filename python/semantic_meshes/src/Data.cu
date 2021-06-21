@@ -16,5 +16,5 @@ BOOST_PYTHON_MODULE(data)
     .def("save", &Ply::save1)
     .def("save", &Ply::save2)
   ;
-  boost::python::class_<Camera>("Camera", boost::python::no_init);
+  boost::python::class_<Camera>("Camera", boost::python::init<boost::python::object, boost::python::object, boost::python::object, boost::python::object, boost::python::object>());
 };

@@ -13,9 +13,13 @@ setup(
     scripts=["scripts/colorize_cityscapes_mesh.py", "scripts/colorize_mesh.py"],
     license="MIT",
     install_requires=[
-          "tf-semseg",
-          "imageio",
-          "numpy",
-          "tqdm",
-      ],
+        "tf-semseg",
+        "imageio",
+        "numpy",
+        "tqdm",
+        "distinctipy",
+        "columnar",
+        "plyfile",
+        "pyunpack",
+    ],
 )

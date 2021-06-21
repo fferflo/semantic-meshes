@@ -17,7 +17,9 @@ BOOST_PYTHON_MODULE(render)
   registerRenderer<PlyRendererTexels>("PlyRendererTexels");
   registerRenderer<PlyRendererTriangles>("PlyRendererTriangles");
 
-  boost::python::def("renderer", renderer_texels_ply1);
-  boost::python::def("renderer", renderer_texels_ply2);
-  boost::python::def("renderer", renderer_triangles_ply);
+  boost::python::def("texels", renderer_texels_ply1);
+  boost::python::def("texels", renderer_texels_ply2);
+  boost::python::def("texels", renderer_texels_ply3);
+  boost::python::def("texels", renderer_texels_ply4);
+  boost::python::def("triangles", renderer_triangles_ply);
 };

@@ -27,7 +27,7 @@ public:
     }
   };
 
-  TriangleRenderer(std::shared_ptr<data::Ply> ply, std::vector<Camera> cameras)
+  TriangleRenderer(std::shared_ptr<data::Ply> ply)
     : m_renderer(0)
     , m_vertices_d(ply->getTinyplyVertices().size())
     , m_triangles_d(ply->getTinyplyFaces().size())
@@ -36,14 +36,6 @@ public:
     tt::fromThrust(m_vertices_d) = ply->getTinyplyVertices().data();
     tt::for_each(TriangleLambda(thrust::raw_pointer_cast(m_vertices_d.data())),
       tt::fromThrust(m_triangles_d), mem::toDevice(ply->getTinyplyFaces().data()));
-
-    // Construct renderer
-    size_t max_pixels = 0;
-    for (auto& camera : cameras)
-    {
-      max_pixels = math::max(max_pixels, tt::prod(camera.resolution));
-    }
-    m_renderer = decltype(m_renderer)(max_pixels);
   }
 
   size_t getPrimitivesNum() const
@@ -72,6 +64,12 @@ public:
   void render(TImage&& image_d, Camera camera)
   {
     using Pixel = decltype(image_d());
+
+    size_t required_size = tt::prod(camera.resolution);
+    if (required_size > m_renderer.getMutexMemory()->size())
+    {
+      m_renderer = decltype(m_renderer)(required_size);
+    }
 
     // Reset z buffer
     tt::for_each([]__device__(Pixel& p){

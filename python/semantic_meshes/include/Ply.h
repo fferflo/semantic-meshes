@@ -65,13 +65,33 @@ struct PlyRendererTexels : Renderer<PlyRendererTexels>
   {
   }
 
+  static std::vector<semantic_meshes::Camera> getCameras(boost::python::list cameras)
+  {
+    std::vector<semantic_meshes::Camera> result;
+    for (auto i = 0; i < boost::python::len(cameras); ++i)
+    {
+        result.push_back(static_cast<Camera&>(boost::python::extract<Camera&>(cameras[i])).camera);
+    }
+    return result;
+  }
+
+  PlyRendererTexels(Ply ply, boost::python::list cameras, float texels_per_pixel)
+    : renderer(std::make_shared<semantic_meshes::render::TexturedTriangleRenderer>(ply.ply, getCameras(cameras), texels_per_pixel))
+  {
+  }
+
+  PlyRendererTexels(Ply ply, boost::python::list cameras)
+    : renderer(std::make_shared<semantic_meshes::render::TexturedTriangleRenderer>(ply.ply, getCameras(cameras)))
+  {
+  }
+
   std::shared_ptr<semantic_meshes::render::TexturedTriangleRenderer> renderer;
 };
 
 struct PlyRendererTriangles : Renderer<PlyRendererTriangles>
 {
-  PlyRendererTriangles(Ply ply, Colmap colmap)
-    : renderer(std::make_shared<semantic_meshes::render::TriangleRenderer>(ply.ply, colmap.colmap->getCameras()))
+  PlyRendererTriangles(Ply ply)
+    : renderer(std::make_shared<semantic_meshes::render::TriangleRenderer>(ply.ply))
   {
   }
 
@@ -88,7 +108,17 @@ PlyRendererTexels renderer_texels_ply2(Ply ply, Colmap colmap, float texels_per_
   return PlyRendererTexels(ply, colmap, texels_per_pixel);
 }
 
-PlyRendererTriangles renderer_triangles_ply(Ply ply, Colmap colmap)
+PlyRendererTexels renderer_texels_ply3(Ply ply, boost::python::list cameras)
 {
-  return PlyRendererTriangles(ply, colmap);
+  return PlyRendererTexels(ply, cameras);
+}
+
+PlyRendererTexels renderer_texels_ply4(Ply ply, boost::python::list cameras, float texels_per_pixel)
+{
+  return PlyRendererTexels(ply, cameras, texels_per_pixel);
+}
+
+PlyRendererTriangles renderer_triangles_ply(Ply ply)
+{
+  return PlyRendererTriangles(ply);
 }

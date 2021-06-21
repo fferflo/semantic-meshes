@@ -14,12 +14,12 @@ struct Colmap
 
   Camera getCamera1(size_t index) const
   {
-    return Camera{colmap->getCamera(index)};
+    return Camera(colmap->getCamera(index));
   }
 
   Camera getCamera2(std::string path) const
   {
-    return Camera{colmap->getCamera(path)};
+    return Camera(colmap->getCamera(path));
   }
 
   std::shared_ptr<semantic_meshes::data::Colmap> colmap;

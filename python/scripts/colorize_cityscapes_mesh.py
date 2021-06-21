@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, os, imageio, sys
-import semantic_meshes.fusion, semantic_meshes.data, semantic_meshes.render
-import tf_semseg
+import argparse, os, imageio, sys, semantic_meshes, tf_semseg
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -46,7 +44,7 @@ predictor = tf.function(predictor) # Improve performance by compiling to tensorf
 print("Creating mesh...")
 mesh = semantic_meshes.data.Ply(args.input_ply)
 colmap_workspace = semantic_meshes.data.Colmap(args.colmap)
-renderer = semantic_meshes.render.renderer(mesh, colmap_workspace)
+renderer = semantic_meshes.render.triangles(mesh)
 aggregator = semantic_meshes.fusion.MeshAggregator(primitives=renderer.getPrimitivesNum(), classes=19)
 
 print("Annotating mesh...")

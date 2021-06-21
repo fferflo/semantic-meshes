@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, os, imageio, sys
-import semantic_meshes.fusion, semantic_meshes.colmap
+import argparse, os, imageio, sys, semantic_meshes
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -28,8 +27,10 @@ if args.remap:
             return next_class
 
 print("Creating mesh...")
-mesh = semantic_meshes.colmap.ColmapTriangleMesh(args.colmap, args.input_ply)
-aggregator = semantic_meshes.fusion.MeshAggregator(primitives=mesh.getPrimitivesNum(), classes=args.classes)
+mesh = semantic_meshes.data.Ply(args.input_ply)
+colmap_workspace = semantic_meshes.data.Colmap(args.colmap)
+renderer = semantic_meshes.render.triangles(mesh)
+aggregator = semantic_meshes.fusion.MeshAggregator(primitives=renderer.getPrimitivesNum(), classes=args.classes)
 
 print("Annotating mesh...")
 mask_files = os.listdir(args.masks)
@@ -60,7 +61,7 @@ for mask_file in tqdm(mask_files):
     probs = tf.one_hot(mask, depth=args.classes)
 
     # Project annotations into mesh
-    primitive_indices, _ = mesh.render(mask_file)
+    primitive_indices, _ = renderer.render(colmap_workspace.getCamera(mask_file))
     probs = tf.transpose(probs, perm=(1, 0, 2))
     aggregator.add(primitive_indices, probs)
 
