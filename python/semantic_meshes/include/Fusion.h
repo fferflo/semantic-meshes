@@ -4,45 +4,6 @@
 #include <semantic_meshes/fusion/Mesh.h>
 #include "Common.h"
 
-template <typename TAnnotation, typename TAllocator>
-class ModelRenderer
-{
-public:
-  ModelRenderer(semantic_meshes::ModelRenderer<TAnnotation, TAllocator>&& renderer)
-    : m_renderer(std::move(renderer))
-  {
-  }
-
-  struct Render
-  {
-    ModelRenderer<TAnnotation, TAllocator>& self;
-    boost::python::object rendered;
-
-    template <typename TPrimitiveImage>
-    void operator()(TPrimitiveImage&& primitive_image)
-    {
-      tt::AllocMatrixT<TAnnotation, mem::alloc::host_heap, tt::RowMajor> image(primitive_image.dims());
-      self.m_renderer.render(image, std::forward<TPrimitiveImage>(primitive_image), TAnnotation(0));
-      rendered = tt::boost::python::toNumpy(tt::total<2>(image));
-    }
-  };
-
-  boost::python::object render(boost::python::object primitive_image)
-  {
-    tt::boost::python::without_gil guard;
-    Render functor{*this};
-    auto result = dispatch::all(FromPrimitiveImage(primitive_image))(functor);
-    if (!result)
-    {
-      throw std::invalid_argument(result.error());
-    }
-    return functor.rendered;
-  }
-
-private:
-  semantic_meshes::ModelRenderer<TAnnotation, TAllocator> m_renderer;
-};
-
 template <typename TAggregator, typename TAllocator>
 class ModelAggregator
 {
@@ -110,12 +71,6 @@ public:
   {
     tt::boost::python::without_gil guard;
     m_aggregator.reset();
-  }
-
-  ModelRenderer<Annotation, TAllocator> renderer()
-  {
-    tt::boost::python::without_gil guard;
-    return ModelRenderer<Annotation, TAllocator>(m_aggregator.renderer());
   }
 
   ::boost::python::object get()

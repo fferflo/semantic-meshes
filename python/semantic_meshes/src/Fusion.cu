@@ -16,7 +16,6 @@ void registerMeshAggregator(std::string name, TAggregator aggregator)
     .def(boost::python::init<size_t, float>())
     .def("add", &Aggregator::add1)
     .def("add", &Aggregator::add2)
-    .def("renderer", &Aggregator::renderer)
     .def("reset", &Aggregator::reset)
     .def("get", &Aggregator::get)
   ;
@@ -42,11 +41,6 @@ struct RegisterClasses<TClassesNum, TClassesNumRest...>
 {
   void operator()()
   {
-    using Renderer = ModelRenderer<tt::VectorXT<float, TClassesNum>, mem::alloc::host_heap>;
-    boost::python::class_<Renderer>((std::string("MeshRenderer") + util::to_string(TClassesNum)).c_str(), boost::python::no_init)
-      .def("render", &Renderer::render)
-    ;
-
     // TODO: differentiate on parallel and sequential here
 
     registerMeshAggregator<mem::alloc::host_heap>(std::string("Sum") + util::to_string(TClassesNum),
