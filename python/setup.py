@@ -8,12 +8,12 @@ setup(
     description="Label fusion for semantic meshes",
     author="Florian Fervers",
     author_email="florian.fervers@gmail.com",
-    packages=["semantic_meshes"],
+    packages=["semantic_meshes", "semantic_meshes.data2"],
     package_data={"semantic_meshes": ["*.so"]},
     scripts=["scripts/colorize_cityscapes_mesh.py", "scripts/colorize_mesh.py"],
     license="MIT",
     install_requires=[
-        "tf-semseg",
+        "tf-semseg==0.2",
         "imageio",
         "numpy",
         "tqdm",
@@ -21,5 +21,6 @@ setup(
         "columnar",
         "plyfile",
         "pyunpack",
+        "opencv-python",
     ],
 )
