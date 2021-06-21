@@ -102,4 +102,6 @@ make install # Installs to the local install directory
 pip install ./python
 ```
 
-For a full installation script that also fetches and installs compatible Boost and Python versions, see [`install.sh`](https://github.com/fferflo/semantic-meshes/blob/master/install.sh).
+#### Build with incompatible Boost or Python versions
+
+Alternatively, in case your OS versions of Boost or Python do not match the version requirements of semantic-meshes, we provide an installation script that also fetches and locally installs compatible versions of these dependencies: [`install.sh`](https://github.com/fferflo/semantic-meshes/blob/master/install.sh). Since the script builds python from source, make sure to first install all optional Python dependencies that you require (see e.g. [https://github.com/python/cpython/blob/main/.github/workflows/posix-deps-apt.sh](https://github.com/python/cpython/blob/main/.github/workflows/posix-deps-apt.sh)).
