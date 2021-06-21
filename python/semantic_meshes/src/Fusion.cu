@@ -75,8 +75,34 @@ struct RegisterClasses<TClassesNum, TClassesNumRest...>
   }
 };
 
+
+template <size_t... TClassesNums>
+struct CheckClasses;
+
+template <>
+struct CheckClasses<>
+{
+  bool operator()(size_t classes_num)
+  {
+    return false;
+  }
+};
+
+template <size_t TClassesNum, size_t... TClassesNumRest>
+struct CheckClasses<TClassesNum, TClassesNumRest...>
+{
+  bool operator()(size_t classes_num)
+  {
+    return classes_num == TClassesNum || CheckClasses<TClassesNumRest...>()(classes_num);
+  }
+};
+
 boost::python::object construct1(size_t primitives_num, size_t classes_num, std::string aggregator, float images_equal_weight)
 {
+  if (!CheckClasses<BOOST_PP_SEQ_ENUM(CLASSES_NUMS)>()(classes_num))
+  {
+    throw std::invalid_argument(std::string("The project was not compiled to use the following number of classes: ") + std::to_string(classes_num) + ". Please use -DCLASSES_NUMS=... and recompile");
+  }
   aggregator[0] = std::toupper(aggregator[0]);
   return constructors[(std::string("MeshAggregator") + aggregator + util::to_string(classes_num)).c_str()](primitives_num, images_equal_weight);
 }

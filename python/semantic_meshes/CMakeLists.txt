@@ -9,7 +9,7 @@ if(NOT TARGET TemplateTensors::interface.boost.numpy)
   message(FATAL_ERROR "Could not find boost numpy library")
 endif()
 
-set(CLASSES_NUMS "40" CACHE STRING "List of number of classes for which the project should be compiled")
+set(CLASSES_NUMS "19" CACHE STRING "List of number of classes for which the project should be compiled")
 
 Python3_add_library(fusion
   src/Fusion.cu
