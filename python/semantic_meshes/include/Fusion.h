@@ -23,48 +23,38 @@ public:
   {
   }
 
-  struct Add
+  template <typename TDestTensor>
+  struct TensorConstructor
   {
-    ModelAggregator<TAggregator, TAllocator>& self;
-
-    template <typename TPrimitiveImage, typename TProbsImage, typename TWeightsImage>
-    void operator()(TPrimitiveImage&& primitive_image, TProbsImage&& probs_image, TWeightsImage&& weights_image)
+    template <typename TSrcTensor>
+    TDestTensor operator()(TSrcTensor&& src)
     {
-      self.m_aggregator.add(
-        std::forward<TPrimitiveImage>(primitive_image),
-        tt::partial<2>(std::forward<TProbsImage>(probs_image)),
-        std::forward<TWeightsImage>(weights_image)
-      );
-    }
-
-    template <typename TPrimitiveImage, typename TProbsImage>
-    void operator()(TPrimitiveImage&& primitive_image, TProbsImage&& probs_image)
-    {
-      self.m_aggregator.add(
-        std::forward<TPrimitiveImage>(primitive_image),
-        tt::partial<2>(std::forward<TProbsImage>(probs_image))
-      );
+      return TDestTensor(src.dims()) = std::forward<TSrcTensor>(src);
     }
   };
 
-  void add1(boost::python::object primitive_image, boost::python::object probs_image, boost::python::object weights_image)
+  void add1(boost::python::object primitive_image_py, boost::python::object probs_image_py, boost::python::object weights_image_py)
   {
     tt::boost::python::without_gil guard;
-    auto result = dispatch::all(FromPrimitiveImage(primitive_image), FromProbsImage(probs_image), FromWeightsImage(weights_image))(Add{*this});
-    if (!result)
-    {
-      throw std::invalid_argument(result.error());
-    }
+    auto primitive_image = dispatch::get_result(TensorConstructor<tt::AllocTensorT<uint32_t, mem::alloc::host_heap, tt::RowMajor, 2>>(), FromPrimitiveImage(primitive_image_py));
+    auto probs_image = dispatch::get_result(TensorConstructor<tt::AllocTensorT<float, mem::alloc::host_heap, tt::RowMajor, 3>>(), FromProbsImage(probs_image_py));
+    auto weights_image = dispatch::get_result(TensorConstructor<tt::AllocTensorT<float, mem::alloc::host_heap, tt::RowMajor, 2>>(), FromWeightsImage(weights_image_py));
+    m_aggregator.add(
+      std::move(primitive_image),
+      tt::partial<2>(std::move(probs_image)),
+      std::move(weights_image)
+    );
   }
 
-  void add2(boost::python::object primitive_image, boost::python::object probs_image)
+  void add2(boost::python::object primitive_image_py, boost::python::object probs_image_py)
   {
     tt::boost::python::without_gil guard;
-    auto result = dispatch::all(FromPrimitiveImage(primitive_image), FromProbsImage(probs_image))(Add{*this});
-    if (!result)
-    {
-      throw std::invalid_argument(result.error());
-    }
+    auto primitive_image = dispatch::get_result(TensorConstructor<tt::AllocTensorT<uint32_t, mem::alloc::host_heap, tt::RowMajor, 2>>(), FromPrimitiveImage(primitive_image_py));
+    auto probs_image = dispatch::get_result(TensorConstructor<tt::AllocTensorT<float, mem::alloc::host_heap, tt::RowMajor, 3>>(), FromProbsImage(probs_image_py));
+    m_aggregator.add(
+      std::move(primitive_image),
+      tt::partial<2>(std::move(probs_image))
+    );
   }
 
   void reset()
