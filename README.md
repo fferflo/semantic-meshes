@@ -26,26 +26,29 @@ import semantic_meshes
 
 ...
 
-# Load a mesh from colmap workspace path and ply mesh file
-mesh = semantic_meshes.colmap.ColmapTriangleMesh(args.colmap, args.input_ply)
+# Load a mesh from ply file
+mesh = semantic_meshes.data.Ply(args.input_ply)
+# Instantiate a triangle renderer for the mesh
+renderer = semantic_meshes.render.triangles(mesh)
+# Load colmap workspace for camera poses
+colmap_workspace = semantic_meshes.data.Colmap(args.colmap)
 # Instantiate an aggregator for aggregating the 2D input annotations per 3D primitive
-aggregator = semantic_meshes.fusion.MeshAggregator(primitives=mesh.getPrimitivesNum(), classes=19)
+aggregator = semantic_meshes.fusion.MeshAggregator(primitives=renderer.getPrimitivesNum(), classes=19)
 
 ...
 
 # Process all input images
 for image_file in image_files:
+    # Load image from file
     image = imageio.imread(image_file)
     ...
     # Predict class probability distributions for all pixels in the input image
     prediction = predictor(image)
-
     ...
-
-    # Render the mesh from the pose of the given image (must be part of the colmap workspace)
+    # Render the mesh from the pose of the given image
     # This returns an image that contains the index of the projected mesh primitive per pixel
-    primitive_indices, _ = mesh.render(image_file)
-
+    primitive_indices, _ = renderer.render(colmap_workspace.getCamera(image_file))
+    ...
     # Aggregate the class probability distributions of all pixels per primitive
     aggregator.add(primitive_indices, prediction)
 

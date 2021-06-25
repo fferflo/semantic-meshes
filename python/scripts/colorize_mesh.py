@@ -4,6 +4,7 @@ import argparse, os, imageio, sys, semantic_meshes
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
+from distinctipy import distinctipy
 
 parser = argparse.ArgumentParser(description="Annotate a colmap mesh with classes from mask images and save as colorized ply.")
 parser.add_argument("--colmap", type=str, required=True, help="Path to colmap workspace folder containing {cameras, images, points3D}.{bin|txt}")
@@ -74,13 +75,7 @@ if args.remap:
     print(f"Found {len(color_to_class)} unique colors: {[class_to_color[c].tolist() for c in sorted(list(color_to_class.values()))]}")
 else:
     # Generate a distinct color mapping for the given classes
-    class_to_color = []
-    color = np.array([int(0.1 * 256), int(0.5 * 256), int(0.9 * 256)])
-    step = 256 / args.classes
-    for _ in range(args.classes):
-        color = np.mod(color + step, 256)
-        class_to_color.append(color)
-    class_to_color = np.array(class_to_color, "uint8")
+    class_to_color = np.asarray(distinctipy.get_colors(args.classes)) * 255.0
     print(f"Generated {len(color_to_class)} unique colors: {[class_to_color[c].tolist() for c in range(args.classes)]}")
 
 print("Computing primitive colors...")

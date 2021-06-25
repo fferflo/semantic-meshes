@@ -36,15 +36,16 @@ class_to_color = [
 ]
 
 print("Loading pretrained segmentation model...")
-predictor = tf_semseg.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes() # Load a pretrained model
+preprocess = tf_semseg.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes.preprocess
+predictor = tf_semseg.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes.create() # Load a pretrained model
 predictor = tf_semseg.predict.sliding(predictor, (713, 713), 0.2) # Perform sliding window inference
 predictor = tf_semseg.predict.multi_scale(predictor, [0.5]) # Resize input images to resolution that matches Cityscapes dataset
 predictor = tf.function(predictor) # Improve performance by compiling to tensorflow graph
 
 print("Creating mesh...")
 mesh = semantic_meshes.data.Ply(args.input_ply)
-colmap_workspace = semantic_meshes.data.Colmap(args.colmap)
 renderer = semantic_meshes.render.triangles(mesh)
+colmap_workspace = semantic_meshes.data.Colmap(args.colmap)
 aggregator = semantic_meshes.fusion.MeshAggregator(primitives=renderer.getPrimitivesNum(), classes=19)
 
 print("Annotating mesh...")
@@ -52,11 +53,10 @@ image_files = os.listdir(args.images)
 image_files = [os.path.join(args.images, file) for file in image_files]
 for image_file in tqdm(image_files):
     # Load input image
-    image = imageio.imread(image_file) # Loads in RGB order
+    image = imageio.imread(image_file)
+    image = preprocess(image)
 
     # Predict segmentation
-    image = image - np.array([123.68, 116.779, 103.939]) # Preprocess: Subtract imagenet mean
-    image = image[:, :, ::-1] # Preprocess: RGB -> BGR, since pretrained network requires BGR input
     image = np.expand_dims(image, axis=0) # Add batch dimension
     prediction = predictor(image)
     prediction = prediction[0, :, :, :] # Remove batch dimension
