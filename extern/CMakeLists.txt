@@ -2,24 +2,32 @@ option(BUILD_DEPENDENCIES_IF_NECESSARY "Download and build some external depende
 
 if(BUILD_DEPENDENCIES_IF_NECESSARY)
   function(build_dependency NAME FIND_NAME CMAKE_ARGS)
-    # Check if dependency can already be found
-    find_package(${FIND_NAME} QUIET)
-    if(NOT ${FIND_NAME}_FOUND)
-      # Git submodule update
-      find_package(Git QUIET)
-      if(NOT GIT_FOUND)
-        message(FATAL_ERROR "Cannot build external dependencies without git")
+    # Check if dependency can already be found, fetch git submodule otherwise
+    if(NOT DEFINED BUILD_${FIND_NAME})
+      find_package(${FIND_NAME} QUIET)
+      if(NOT ${FIND_NAME}_FOUND)
+        # Git submodule update
+        find_package(Git QUIET)
+        if(NOT GIT_FOUND)
+          message(FATAL_ERROR "Cannot build external dependencies without git")
+        endif()
+        if(NOT EXISTS "${PROJECT_SOURCE_DIR}/.git")
+          message(FATAL_ERROR "Project is not a git directory")
+        endif()
+        execute_process(
+          COMMAND ${GIT_EXECUTABLE} submodule update --init ${NAME}
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND_ERROR_IS_FATAL ANY
+        )
+        set(BUILD_${FIND_NAME} ON CACHE BOOL "")
+      else()
+        set(BUILD_${FIND_NAME} OFF CACHE BOOL "")
       endif()
-      if(NOT EXISTS "${PROJECT_SOURCE_DIR}/.git")
-        message(FATAL_ERROR "Project is not a git directory")
-      endif()
-      execute_process(
-        COMMAND ${GIT_EXECUTABLE} submodule update --init ${NAME}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMAND_ERROR_IS_FATAL ANY
-      )
+    endif()
 
-      # Build
+    # Build
+    if(BUILD_${FIND_NAME})
+      message("################## Building ${NAME} ##################")
       file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${NAME}-extern)
       set(CMAKE_PREFIX_PATH_STR ${CMAKE_PREFIX_PATH})
       string(REPLACE ";" "\;" CMAKE_PREFIX_PATH_STR "${CMAKE_PREFIX_PATH_STR}")
