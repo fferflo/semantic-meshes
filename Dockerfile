@@ -19,5 +19,5 @@ RUN git clone https://github.com/fferflo/semantic-meshes
 RUN mkdir /semantic-meshes/build
 WORKDIR /semantic-meshes/build
 RUN cmake -DCLASSES_NUMS=19 -DBUILD_PYTHON_INTERFACE=ON ..
-RUN make -j8 && make install
+RUN make && make install
 RUN pip3 install ./python
