@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, os, imageio, sys, tf_semseg, semantic_meshes
-import semantic_meshes
+import argparse, os, imageio, sys, tf_semseg, semantic_meshes, yaml
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -15,6 +14,7 @@ parser.add_argument("--scannet", type=str, required=True, help="Path to scannet 
 parser.add_argument("--images_equal_weight", type=float, default=0.5, help="Soft boolean flag such that 0.0 weights images equally and 1.0 weights pixels equally in the fusion step")
 parser.add_argument("--frames_step", type=int, default=1, help="Only use every n-th frame from a scene's frames")
 parser.add_argument("--debug", type=str, default=None, help="A path where debugging images and plys are stored for the first scene")
+parser.add_argument("--output", type=str, default=None, help="File where results will be stored")
 
 parser.add_argument("--mode", type=str, default="triangles", help="Argument determining whether 'triangles' or 'texels' meshes should be used for the fusion")
 parser.add_argument("--texel_resolution", type=float, default=0.1, help="Texel resolution parameter. Only valid with '--mode texels'")
@@ -226,4 +226,24 @@ for scene_index, scene in enumerate(scenes):
 
     if not args.debug is None:
         print("Stopping after first scene due to debug mode")
-        sys.exit(0)
+        break
+
+
+result = {"metrics": {}, "params": {}}
+for prefix, metrics in [("vertex", vertex_metrics), ("image_network", image_metrics_network), ("image_fused", image_metrics_fused)]:
+    result["metrics"][prefix] = {}
+    for m in metrics:
+        result["metrics"][prefix][m.name] = float(m.result().numpy())
+result["params"]["images_equal_weight"] = args.images_equal_weight
+result["params"]["frames_step"] = args.frames_step
+result["params"]["mode"] = args.mode
+if args.mode == "texels":
+    result["params"]["texel_resolution"] = args.texel_resolution
+
+if not args.output is None and len(args.output) > 0:
+    print(f"Saving results to {args.output}")
+    with open(args.output, "w") as f:
+        yaml.dump(result, f, default_flow_style=False)
+
+print("Results:")
+print(result)
