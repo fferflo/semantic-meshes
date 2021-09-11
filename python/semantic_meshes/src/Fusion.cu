@@ -43,6 +43,26 @@ struct RegisterClasses<TClassesNum, TClassesNumRest...>
   {
     // TODO: differentiate on parallel and sequential here
 
+    registerMeshAggregator<mem::alloc::host_heap>(std::string("Summax") + util::to_string(TClassesNum),
+      aggregator::map_output(nan_and_inf_to_zero_elwise(),
+        aggregator::map_output(tt::functor::normalize<tt::functor::l1_norm>(),
+          aggregator::map_output(atomic::functor::load(),
+            aggregator::map_input(
+              [](auto&& probs_in, float weight){
+                tt::VectorXT<float, TClassesNum> probs_out(0);
+                size_t max_index = tt::argmax<1>(probs_in)();
+                probs_out(max_index) = probs_in(max_index);
+                return tt::VectorXT<float, TClassesNum>(probs_out * weight);
+              },
+              aggregator::sum<
+                atomic::Variable<tt::VectorXT<float, TClassesNum>, atomic::op::Lock<std::mutex>>
+              >()
+            )
+          )
+        )
+      )
+    );
+
     registerMeshAggregator<mem::alloc::host_heap>(std::string("Sum") + util::to_string(TClassesNum),
       aggregator::map_output(nan_and_inf_to_zero_elwise(),
         aggregator::map_output(tt::functor::normalize<tt::functor::l1_norm>(),
