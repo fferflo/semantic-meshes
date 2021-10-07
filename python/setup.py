@@ -22,5 +22,6 @@ setup(
         "plyfile",
         "pyunpack",
         "opencv-python",
+        "pyyaml",
     ],
 )
