@@ -26,10 +26,16 @@ public:
   template <typename TDestTensor>
   struct TensorConstructor
   {
+    static const size_t RANK = tt::non_trivial_dimensions_num_v<TDestTensor>::value;
+
     template <typename TSrcTensor>
     TDestTensor operator()(TSrcTensor&& src)
     {
-      return TDestTensor(src.dims()) = std::forward<TSrcTensor>(src);
+      TDestTensor result(src.dims());
+      tt::op::LocalArrayForEach<openmp::ForEach>::template for_each<RANK>([&](tt::VectorXs<RANK> pos, auto& dest){
+        dest = src(pos);
+      }, result);
+      return std::move(result);
     }
   };
 
