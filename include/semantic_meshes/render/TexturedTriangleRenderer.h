@@ -34,7 +34,7 @@ public:
     tt::Vector2f uv =
         barycentric_coords(0) * tt::Vector2f(0, 0)
       + barycentric_coords(1) * tt::Vector2f(1, 0)
-      + barycentric_coords(2) * tt::Vector2f(1, 1);
+      + barycentric_coords(2) * tt::Vector2f(0, 1);
     tt::VectorXT<TResolutionType, 2> texel_coords = (uv - 1e-6) * resolution;
     TIndexType relative_texel_index = tt::SymmetricMatrixLowerTriangleRowMajor().toIndex(resolution, texel_coords);
     return first_texel_index + relative_texel_index;
@@ -127,21 +127,22 @@ public:
         triangles_resolution[triangle_index] = math::ceil(texels_per_pixel * math::sqrt(num_pixels_agg.get()));
 
         // Optimally order face indices
-        float best_diff = math::consts<float>::INF;
-        size_t best_00_vertex_index;
+        tt::Vector3f diffs;
         for (size_t vertex_index = 0; vertex_index < 3; vertex_index++)
         {
           float angle = tt::angle(get_vertex(vertex_index + 1) - get_vertex(vertex_index), get_vertex(vertex_index + 2) - get_vertex(vertex_index));
           float diff = math::abs(angle - math::to_rad(90.0));
-          if (diff < best_diff)
-          {
-            best_diff = diff;
-            best_00_vertex_index = vertex_index;
-          }
+          diffs(vertex_index) = diff;
         }
+        size_t best_00_vertex_index = tt::argmin<1>(diffs)();
         if (best_00_vertex_index != 0)
         {
           util::swap(face(0), face(best_00_vertex_index));
+          util::swap(diffs(0), diffs(best_00_vertex_index));
+        }
+        if (diffs(1) >= diffs(2))
+        {
+          util::swap(face(1), face(2));
         }
     });
 
@@ -218,7 +219,7 @@ public:
   }
 
 private:
-  tt::geometry::render::DeviceMutexRasterizer<16 * 16> m_renderer;
+  tt::geometry::render::DeviceMutexRasterizer<64 * 64> m_renderer;
   thrust::device_vector<tt::Vector3f> m_vertices_d;
   thrust::device_vector<Triangle> m_triangles_d;
   size_t m_primitive_num;

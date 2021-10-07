@@ -87,7 +87,6 @@ public:
         mem::toHost(std::forward<TWeightsImage>(weights_image_in))
       )
     );
-
     std::map<size_t, size_t> pixels_per_face;
     tt::op::LocalForEach::for_each([&](size_t primitive_index){
       pixels_per_face.insert({primitive_index, 0}).first->second += 1;
