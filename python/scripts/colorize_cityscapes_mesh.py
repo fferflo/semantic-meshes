@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, os, imageio, sys, semantic_meshes, tf_semseg
+import argparse, os, imageio, sys, semantic_meshes, tfcv
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -36,10 +36,10 @@ class_to_color = [
 ]
 
 print("Loading pretrained segmentation model...")
-preprocess = tf_semseg.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes.preprocess
-predictor = tf_semseg.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes.create() # Load a pretrained model
-predictor = tf_semseg.predict.sliding(predictor, (713, 713), 0.2) # Perform sliding window inference
-predictor = tf_semseg.predict.multi_scale(predictor, [0.5]) # Resize input images to resolution that matches Cityscapes dataset
+preprocess = tfcv.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes.preprocess
+predictor = tfcv.model.pretrained.vladkryvoruchko.pspnet_resnet_v1s_101_cityscapes.create() # Load a pretrained model
+predictor = tfcv.predict.sliding(predictor, (713, 713), 0.2) # Perform sliding window inference
+predictor = tfcv.predict.multi_scale(predictor, [0.5]) # Resize input images to resolution that matches Cityscapes dataset
 predictor = tf.function(predictor) # Improve performance by compiling to tensorflow graph
 
 print("Creating mesh...")

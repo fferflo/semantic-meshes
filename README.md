@@ -8,7 +8,7 @@
 ## Workflow
 
 1. Reconstruct a mesh of your scene from a set of images (e.g. using [Colmap](https://github.com/colmap/colmap)).
-2. Send all undistorted images through your segmentation model (e.g. from [tf-semseg](https://github.com/fferflo/tf-semseg) or [image-segmentation-keras](https://github.com/divamgupta/image-segmentation-keras)) to produce 2D semantic annotation images.
+2. Send all undistorted images through your segmentation model (e.g. from [tfcv](https://github.com/fferflo/tfcv) or [image-segmentation-keras](https://github.com/divamgupta/image-segmentation-keras)) to produce 2D semantic annotation images.
 3. Project all 2D annotations into the 3D mesh and fuse conflicting predictions.
 4. Render the annotated mesh from original camera poses to produce new 2D consistent annotation images, or save it as a colorized ply file.
 
