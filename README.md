@@ -5,6 +5,19 @@
 [![Build](https://github.com/fferflo/semantic-meshes/actions/workflows/build-ci.yml/badge.svg?branch=master)](https://github.com/fferflo/semantic-meshes/actions/workflows/build-ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Paper
+If you find this framework useful in your research, please consider citing: [[arxiv]](https://arxiv.org/abs/2111.11103)
+```
+@misc{fervers2021improving,
+      title={Improving Semantic Image Segmentation via Label Fusion in Semantically Textured Meshes},
+      author={Florian Fervers, Timo Breuer, Gregor Stachowiak, Sebastian Bullinger, Christoph Bodensteiner, Michael Arens},
+      year={2021},
+      eprint={2111.11103},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+
 ## Workflow
 
 1. Reconstruct a mesh of your scene from a set of images (e.g. using [Colmap](https://github.com/colmap/colmap)).
